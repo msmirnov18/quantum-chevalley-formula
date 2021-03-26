@@ -134,13 +134,25 @@ class QuantumCohomologyPartialFlagVariety:
         return element.leading_coefficient() * (classical + quantum)
 
 
+    def anticanonical(self):
+        """Return the anticanonical divisor as an element of the underlying module."""
+        weight_lattice = self.root_system.weight_lattice()
+        anticanonical_weight = weight_lattice.nonparabolic_positive_root_sum(self.nonparabolic)
+        coefficients = [anticanonical_weight.coefficient(k) for k in self.parabolic]
+
+        return sum([c*d for (c, d) in zip(coefficients, self.divisors)])
+
+
     def quantum_spectrum(self):
-        # determine canonical divisor
+        anticanonical = self.anticanonical()
 
         # determine the matrix
+        M = [self.quantum_chevalley(anticanonical, element) for element in self.module.basis()]
+        M = matrix(self.module.dimension(), lambda i, j: M[i].coefficient(self.schubert_basis[j]))
 
         # specialise
+        M = M.substitute({q:1 for q in QH.coefficients.gens()})
+        M = M.change_ring(ZZ)
 
         # compute eigenvalues
-
-        return []
+        return M.eigenvalues()
